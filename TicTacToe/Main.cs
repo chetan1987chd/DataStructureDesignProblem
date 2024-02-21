@@ -1,4 +1,9 @@
+//Complexity Analysis
 
+//Time Complexity: O(n)O(n)O(n), as for every move we are iterating over n cells 4 times to check for each of the column, row, diagonal row, and anti-diagonal. 
+//This gives us time complexity of O(4⋅*n) which is equivalent to O(n)
+
+//Space Complexity: O(n^2), as we are using 2-dimensional array board of size n * n.
 
 public class TicTacToe
 {
