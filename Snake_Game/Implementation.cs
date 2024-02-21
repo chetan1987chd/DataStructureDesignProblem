@@ -1,109 +1,126 @@
-public class SnakeGame
-{
-    // Dimensions of the game board
-    private readonly int Width;
-    private readonly int Height;
+public class SnakeGame {
 
-    // 2D array to store the coordinates of food items
-    private readonly int[][] Food;
-    private int FoodIndex = 0; // Index to keep track of the current food item being consumed
+    int CurrentHeight = 0;
+    int CurrentWidth = 0;
+    int FoodIndex = 0;
 
-    private int Score = 0; // Player's score
+    int Height = 0;
+    int Width = 0;
 
-    // Current coordinates of the snake's head
-    private int HeadW = 0;
-    private int HeadH = 0;
-    private Queue<string> Body = new(); // Queue to store coordinates of the snake's body
+    int Score = 0;
+    int[][] Food;  
+    
+    Queue<string> SnakeBody = new Queue<string>();
 
-    // Constructor initializes the game with width, height, and food locations
-    public SnakeGame(int width, int height, int[][] food)
-    {
-        Width = width;
+
+    public SnakeGame(int width, int height, int[][] food) {
         Height = height;
+        Width = width;
         Food = food;
     }
-
-    // Method to move the snake based on the provided direction
+    
+     /// <summary>
+    /// Moves the snake in the specified direction.
+    /// </summary>
+    /// <param name="direction">The direction to move the snake.</param>
+    /// <returns>The current score after the move. Returns -1 if the move is invalid.</returns>
     public int Move(string direction)
     {
-        // Calculate the next position based on the direction
-        var (newH, newW) = CalculateNextPosition(direction);
-        var newHeadString = newH + "," + newW; // String representation of the new head position
+        
+        (int newHeight, int newWidth) = FindNextPosition(direction);
+        var newPosition = GetPositionString(newHeight, newWidth);
 
-        // Check if the new position is out of range
-        if (IsOutOfRange(newH, newW))
+        if (!isInRange(newHeight, newWidth))
         {
-            return -1; // Game over
+            return -1;
         }
 
-        // Check if the new position contains food
-        if (IsOnFood(newH, newW))
+        if (isFoundFood(newHeight, newWidth))
         {
-            Score++; // Increment the score
-            FoodIndex++; // Move to the next food item
-            Body.Enqueue(HeadH + "," + HeadW); // Enqueue the current head position
-            HeadH = newH;
-            HeadW = newW;
-            return Score; // Return the updated score
+            Score++;
+            FoodIndex++;
+            SnakeBody.Enqueue(GetPositionString(CurrentHeight, CurrentWidth));
+            CurrentHeight = newHeight;
+            CurrentWidth = newWidth;
+            return Score;
         }
 
-        // If the snake's body has segments, update the body queue
-        if (Body.Count > 0)
+        if (SnakeBody.Count > 0)
         {
-            Body.Dequeue(); // Remove the tail segment
-            Body.Enqueue(HeadH + "," + HeadW); // Enqueue the new head position
+            SnakeBody.Dequeue();
+            SnakeBody.Enqueue(GetPositionString(CurrentHeight, CurrentWidth));
         }
 
-        // Check if the new head position is already in the snake's body
-        if (Body.Contains(newHeadString))
+        if (SnakeBody.Contains(newPosition))
         {
-            return -1; // Game over (snake collided with itself)
+            return -1;
         }
 
-        // Update the snake's head position
-        HeadH = newH;
-        HeadW = newW;
+        CurrentHeight = newHeight;
+        CurrentWidth = newWidth;
 
-        return Score; // Return the current score
+        return Score;
     }
 
-    // Helper method to check if the provided coordinates are on a food item
-    private bool IsOnFood(int newH, int newW)
+    /// <summary>
+    /// Finds the next position of the snake based on the specified move.
+    /// </summary>
+    /// <param name="move">The move direction.</param>
+    /// <returns>The new height and width of the snake's position.</returns>
+    (int newHeight, int newWidth) FindNextPosition(string move)
     {
-        // Check if there are more food items and if the current position matches a food item
-        if (FoodIndex == Food.Length)
+        switch (move)
+        {
+            case "U": return (CurrentHeight - 1, CurrentWidth);
+            case "D": return (CurrentHeight + 1, CurrentWidth);
+            case "R": return (CurrentHeight, CurrentWidth + 1);
+            case "L": return (CurrentHeight, CurrentWidth - 1);
+            default: throw new Exception("Invalid move");
+        }
+    }
+
+    /// <summary>
+    /// Checks if the new position is within the game board.
+    /// </summary>
+    /// <param name="newHeight">The new height of the snake's position.</param>
+    /// <param name="newWidth">The new width of the snake's position.</param>
+    /// <returns>True if the new position is within the game board, otherwise false.</returns>
+    bool isInRange(int newHeight, int newWidth)
+    {
+        if (newHeight < 0 || newHeight >= Height) return false;
+        if (newWidth < 0 || newWidth >= Width) return false;
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if the new position contains food.
+    /// </summary>
+    /// <param name="newHeight">The new height of the snake's position.</param>
+    /// <param name="newWidth">The new width of the snake's position.</param>
+    /// <returns>True if the new position contains food, otherwise false.</returns>
+    bool isFoundFood(int newHeight, int newWidth)
+    {
+        if (Food.Length == FoodIndex)
+        {
             return false;
+        }
 
-        if (Food[FoodIndex][0] == newH && Food[FoodIndex][1] == newW)
-            return true;
-
-        return false;
-    }
-
-    // Helper method to check if the provided coordinates are out of the game board boundaries
-    private bool IsOutOfRange(int newH, int newW)
-    {
-        // Check if the coordinates are beyond the game board boundaries
-        if (newH < 0 || newH >= Height)
-            return true;
-
-        if (newW < 0 || newW >= Width)
-            return true;
-
-        return false;
-    }
-
-    // Helper method to calculate the next position based on the provided direction
-    private (int newH, int newW) CalculateNextPosition(string direction)
-    {
-        // Calculate the new coordinates based on the direction
-        return direction switch
+        if (Food[FoodIndex][0] == newHeight && Food[FoodIndex][1] == newWidth)
         {
-            "U" => (HeadH - 1, HeadW),
-            "D" => (HeadH + 1, HeadW),
-            "L" => (HeadH, HeadW - 1),
-            "R" => (HeadH, HeadW + 1),
-            _ => throw new Exception("Bad move" + direction), // Throw an exception for an invalid direction
-        };
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets the position string based on the height and width.
+    /// </summary>
+    /// <param name="height">The height of the position.</param>
+    /// <param name="width">The width of the position.</param>
+    /// <returns>The position string in the format "height,width".</returns>
+    string GetPositionString(int height, int width)
+    {
+        return $"{height},{width}";
     }
 }
